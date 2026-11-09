@@ -24,7 +24,11 @@ class _HomeShellState extends State<HomeShell> {
   @override
   void initState() {
     super.initState();
-    core.initialize().then((_) { if (mounted) setState(() => ready = true); });
+    core.initialize().then((_) {
+      if (mounted) {
+        setState(() => ready = true);
+      }
+    });
   }
 
   @override
@@ -213,7 +217,9 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
     setState(() { busy = true; error = null; });
     try {
       await manager.refreshRepository(ExtensionManager.officialRepo);
-    } catch (e) { error = e.toString(); }
+    } catch (e) {
+      error = e.toString();
+    }
     if (mounted) setState(() => busy = false);
   }
   Future<void> importLocal() async {

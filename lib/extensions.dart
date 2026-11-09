@@ -96,7 +96,6 @@ class ExtensionManager {
         throw const FormatException('Ruta no permitida dentro del ZIP.');
       }
       final content = entry.content;
-      if (content is! List<int>) continue;
       expanded += content.length;
       if (expanded > 50 * 1024 * 1024) {
         throw const FormatException('El paquete expandido supera 50 MB.');

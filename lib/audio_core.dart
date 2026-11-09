@@ -76,8 +76,7 @@ class AudioCore {
     currentIndex = index;
     final children = tracks.map((t) => AudioSource.uri(
       Uri.file(t.path), tag: MediaItem(id: t.path, title: t.title, artist: t.artist))).toList();
-    await player.setAudioSource(ConcatenatingAudioSource(children: children),
-      initialIndex: index);
+    await player.setAudioSources(children, initialIndex: index);
     await player.play();
   }
 
