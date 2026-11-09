@@ -1,0 +1,33 @@
+name: Android debug APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Test Rust core
+        working-directory: rust_backend
+        run: cargo test
+      - name: Generate Android project if absent
+        run: |
+          if [ ! -d android ]; then
+            flutter create . --platforms=android --org app.auralis
+          fi
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter build apk --debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: auralis-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
