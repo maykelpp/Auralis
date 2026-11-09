@@ -69,8 +69,11 @@ class _LibraryPageState extends State<LibraryPage> {
           SnackBar(content: Text(n == 0 ? 'No se importaron archivos' : '$n canciones importadas')));
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
   @override
@@ -182,8 +185,11 @@ class _LyricsPageState extends State<LyricsPage> {
       stream: AudioCore.instance.player.positionStream,
       builder: (context, snapshot) {
         final active = LrcLyrics.activeIndex(lines, snapshot.data ?? Duration.zero);
-        if (lines.isEmpty) return const Center(child: Text(
-          'Importa un archivo LRC para ver las letras sincronizadas.'));
+        if (lines.isEmpty) {
+          return const Center(
+            child: Text('Importa un archivo LRC para ver las letras sincronizadas.'),
+          );
+        }
         return ListView.builder(itemCount: lines.length,
           itemBuilder: (context, i) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
