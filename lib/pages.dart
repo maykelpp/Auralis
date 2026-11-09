@@ -90,9 +90,9 @@ class SettingsPage extends StatelessWidget {
 class MiniPlayer extends StatelessWidget {
   const MiniPlayer({super.key});
   @override
-  Widget build(BuildContext context) => const Card(
-    margin: const EdgeInsets.fromLTRB(16, 8, 16, 10),
-    child: const ListTile(
+  Widget build(BuildContext context) => Card(
+    margin: EdgeInsets.fromLTRB(16, 8, 16, 10),
+    child: ListTile(
       leading: Icon(Icons.music_note),
       title: Text('Nada reproduciéndose'),
       subtitle: Text('Selecciona una canción'),
