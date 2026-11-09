@@ -90,7 +90,7 @@ class SettingsPage extends StatelessWidget {
 class MiniPlayer extends StatelessWidget {
   const MiniPlayer({super.key});
   @override
-  Widget build(BuildContext context) => Card(
+  Widget build(BuildContext context) => const Card(
     margin: EdgeInsets.fromLTRB(16, 8, 16, 10),
     child: ListTile(
       leading: Icon(Icons.music_note),
