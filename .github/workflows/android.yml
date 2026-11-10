@@ -1,4 +1,4 @@
-name: Android debug APK
+name: Auralis Android APK
 on:
   workflow_dispatch:
   push:
@@ -15,21 +15,21 @@ jobs:
           channel: stable
           cache: true
       - uses: dtolnay/rust-toolchain@stable
-      - name: Test Rust core
-        working-directory: rust_backend
-        run: cargo test
-      - name: Generate Android project if absent
+      - name: Generate Android project and install native SAF bridge
         run: |
-          if [ ! -d android ]; then
-            flutter create . --platforms=android --org app.auralis
-          fi
-      - name: Remove generated default widget test
-        run: rm -f test/widget_test.dart
+          flutter create . --platforms=android --org app.auralis --project-name auralis_player
+          mkdir -p android/app/src/main/kotlin/app/auralis/auralis_player
+          cp native/android/MainActivity.kt android/app/src/main/kotlin/app/auralis/auralis_player/MainActivity.kt
+          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/' android/app/build.gradle.kts || true
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/' android/app/build.gradle || true
+          python3 tool/prepare_android.py
+      - run: cargo test --manifest-path rust_backend/Cargo.toml
       - run: flutter pub get
-      - run: flutter analyze
-      - run: flutter build apk --debug
+      - run: flutter analyze --no-pub
+      - run: flutter test
+      - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
-          name: auralis-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: Auralis-Android-release
+          path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error

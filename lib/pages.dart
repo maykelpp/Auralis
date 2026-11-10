@@ -5,6 +5,7 @@ import 'package:just_audio/just_audio.dart';
 import 'audio_core.dart';
 import 'extensions.dart';
 import 'lyrics.dart';
+import 'music_feed.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -17,18 +18,14 @@ class _HomeShellState extends State<HomeShell> {
   int tab = 0;
   bool ready = false;
   final pages = const [
-    LibraryPage(), SearchPage(), LyricsPage(), ExtensionsPage(), SettingsPage()
+    FeedPage(), LibraryPage(), SearchPage(), LyricsPage(), ExtensionsPage(), SettingsPage()
   ];
-  final labels = const ['Biblioteca', 'Buscar', 'Letras', 'Extensiones', 'Ajustes'];
+  final labels = const ['Inicio', 'Biblioteca', 'Buscar', 'Letras', 'Extensiones', 'Ajustes'];
 
   @override
   void initState() {
     super.initState();
-    core.initialize().then((_) {
-      if (mounted) {
-        setState(() => ready = true);
-      }
-    });
+    core.initialize().then((_) { if (mounted) setState(() => ready = true); });
   }
 
   @override
@@ -43,6 +40,7 @@ class _HomeShellState extends State<HomeShell> {
       selectedIndex: tab,
       onDestinationSelected: (v) => setState(() => tab = v),
       destinations: const [
+        NavigationDestination(icon: Icon(Icons.home_rounded), label: 'Inicio'),
         NavigationDestination(icon: Icon(Icons.library_music), label: 'Música'),
         NavigationDestination(icon: Icon(Icons.search), label: 'Buscar'),
         NavigationDestination(icon: Icon(Icons.lyrics_outlined), label: 'Letras'),
@@ -51,6 +49,56 @@ class _HomeShellState extends State<HomeShell> {
       ],
     ),
   );
+}
+
+class FeedPage extends StatefulWidget {
+  const FeedPage({super.key});
+  @override
+  State<FeedPage> createState() => _FeedPageState();
+}
+class _FeedPageState extends State<FeedPage> {
+  final service = MusicFeedService();
+  @override
+  Widget build(BuildContext context) {
+    final core = AudioCore.instance;
+    final items = service.merge(local: service.buildLocalFeed(core.tracks));
+    return RefreshIndicator(onRefresh: () async { if (mounted) setState(() {}); },
+      child: ListView(padding: const EdgeInsets.all(16), children: [
+        Text('Descubre tu música', style: Theme.of(context).textTheme.headlineMedium),
+        const SizedBox(height: 6),
+        const Text('Tu colección local, tus favoritos y lo que escuchaste recientemente.'),
+        const SizedBox(height: 18),
+        if (core.recentTracks.isNotEmpty) ...[
+          Text('Escuchado recientemente', style: Theme.of(context).textTheme.titleLarge),
+          for (final track in core.recentTracks.take(5))
+            ListTile(leading: const CircleAvatar(child: Icon(Icons.history)),
+              title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: Text(track.artist), trailing: const Icon(Icons.play_arrow),
+              onTap: () { final i = core.tracks.indexOf(track); if (i >= 0) core.playAt(i); }),
+          const SizedBox(height: 12),
+        ],
+        if (core.favoriteTracks.isNotEmpty) ...[
+          Text('Tus favoritos', style: Theme.of(context).textTheme.titleLarge),
+          for (final track in core.favoriteTracks.take(5))
+            ListTile(leading: const Icon(Icons.favorite),
+              title: Text(track.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: Text(track.artist),
+              onTap: () { final i = core.tracks.indexOf(track); if (i >= 0) core.playAt(i); }),
+          const SizedBox(height: 12),
+        ],
+        if (items.isEmpty) const Card(child: Padding(padding: EdgeInsets.all(24),
+          child: Column(children: [Icon(Icons.queue_music, size: 42),
+            SizedBox(height: 10), Text('Todavía no tienes música'),
+            Text('Importa canciones o una carpeta desde Biblioteca.')]))),
+        if (items.isNotEmpty) Text('Biblioteca', style: Theme.of(context).textTheme.titleLarge),
+        for (final item in items.take(30))
+          ListTile(leading: const CircleAvatar(child: Icon(Icons.music_note)),
+            title: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+            subtitle: Text(item.artist), trailing: const Icon(Icons.play_arrow),
+            onTap: () { final i = core.tracks.indexWhere(
+              (t) => t.path == item.localTrack?.path); if (i >= 0) core.playAt(i); }),
+      ]));
+  }
 }
 
 class LibraryPage extends StatefulWidget {
@@ -69,11 +117,8 @@ class _LibraryPageState extends State<LibraryPage> {
           SnackBar(content: Text(n == 0 ? 'No se importaron archivos' : '$n canciones importadas')));
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')));
     }
   }
   @override
@@ -86,8 +131,18 @@ class _LibraryPageState extends State<LibraryPage> {
       Text('${core.tracks.length} canciones en este dispositivo',
         style: Theme.of(context).textTheme.bodyMedium),
       const SizedBox(height: 16),
-      FilledButton.icon(onPressed: add,
-        icon: const Icon(Icons.add), label: const Text('Importar música')),
+      Row(children: [
+        Expanded(child: FilledButton.icon(onPressed: add,
+          icon: const Icon(Icons.add), label: const Text('Importar archivos'))),
+        const SizedBox(width: 8),
+        Expanded(child: OutlinedButton.icon(onPressed: () async {
+          try { final n = await core.importMusicFolderSaf(); if (mounted) setState(() {});
+            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('$n canciones copiadas a Auralis')));
+          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('No se pudo importar la carpeta: $e'))); }
+        }, icon: const Icon(Icons.folder_open), label: const Text('Elegir carpeta (SAF)'))),
+      ]),
       const SizedBox(height: 12),
       if (core.tracks.isEmpty)
         const Card(child: Padding(padding: EdgeInsets.all(24),
@@ -185,11 +240,8 @@ class _LyricsPageState extends State<LyricsPage> {
       stream: AudioCore.instance.player.positionStream,
       builder: (context, snapshot) {
         final active = LrcLyrics.activeIndex(lines, snapshot.data ?? Duration.zero);
-        if (lines.isEmpty) {
-          return const Center(
-            child: Text('Importa un archivo LRC para ver las letras sincronizadas.'),
-          );
-        }
+        if (lines.isEmpty) return const Center(child: Text(
+          'Importa un archivo LRC para ver las letras sincronizadas.'));
         return ListView.builder(itemCount: lines.length,
           itemBuilder: (context, i) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -223,9 +275,7 @@ class _ExtensionsPageState extends State<ExtensionsPage> {
     setState(() { busy = true; error = null; });
     try {
       await manager.refreshRepository(ExtensionManager.officialRepo);
-    } catch (e) {
-      error = e.toString();
-    }
+    } catch (e) { error = e.toString(); }
     if (mounted) setState(() => busy = false);
   }
   Future<void> importLocal() async {
@@ -318,15 +368,20 @@ class MiniPlayer extends StatelessWidget {
             subtitle: StreamBuilder<PlayerState>(
               stream: player.playerStateStream,
               builder: (context, s) => Text(s.data?.playing == true ? 'Reproduciendo' : 'En pausa')),
-            trailing: StreamBuilder<PlayerState>(
-              stream: player.playerStateStream,
-              builder: (context, s) => IconButton(
-                icon: Icon(s.data?.playing == true ? Icons.pause : Icons.play_arrow),
-                onPressed: () {
-                  if (player.playing) { player.pause(); }
-                  else { player.play(); }
-                }),
-            ),
+            trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+              IconButton(tooltip: 'Anterior', icon: const Icon(Icons.skip_previous),
+                onPressed: player.sequence.isEmpty ? null : () => AudioCore.instance.previous()),
+              StreamBuilder<PlayerState>(
+                stream: player.playerStateStream,
+                builder: (context, s) => IconButton(
+                  icon: Icon(s.data?.playing == true ? Icons.pause : Icons.play_arrow),
+                  onPressed: player.sequence.isEmpty ? null : () {
+                    if (player.playing) { player.pause(); } else { player.play(); }
+                  }),
+              ),
+              IconButton(tooltip: 'Siguiente', icon: const Icon(Icons.skip_next),
+                onPressed: player.sequence.isEmpty ? null : () => AudioCore.instance.next()),
+            ]),
           ));
       },
     );

@@ -28,11 +28,7 @@ class LrcLyrics {
   static int activeIndex(List<LyricLine> lines, Duration position) {
     var index = -1;
     for (var i = 0; i < lines.length; i++) {
-      if (lines[i].time <= position) {
-        index = i;
-      } else {
-        break;
-      }
+      if (lines[i].time <= position) index = i; else break;
     }
     return index;
   }
