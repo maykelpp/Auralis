@@ -48,7 +48,7 @@ class MusicFeedService {
         localTrack: track)).toList(growable: false);
 
   List<MusicFeedItem> merge({required List<MusicFeedItem> local,
-    List<MusicFeedItem> external = []}) {
+    List<MusicFeedItem> external = const []}) {
     final seen = <String>{};
     final result = <MusicFeedItem>[];
     for (final item in [...external, ...local]) {

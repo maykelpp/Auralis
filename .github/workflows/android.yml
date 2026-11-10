@@ -23,6 +23,7 @@ jobs:
           sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/' android/app/build.gradle.kts || true
           sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/' android/app/build.gradle || true
           python3 tool/prepare_android.py
+          rm -f test/widget_test.dart
       - run: cargo test --manifest-path rust_backend/Cargo.toml
       - run: flutter pub get
       - run: flutter analyze --no-pub

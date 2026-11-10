@@ -28,13 +28,17 @@ class ProviderTrack {
     if (title.isEmpty || rawStream is! String) return null;
     final stream = Uri.tryParse(rawStream);
     if (stream == null || stream.scheme != 'https' || stream.host.isEmpty ||
-        stream.userInfo.isNotEmpty) return null;
+        stream.userInfo.isNotEmpty) {
+      return null;
+    }
     final rawCover = json['cover_url'] ?? json['image_url'];
     Uri? cover;
     if (rawCover is String) {
       final parsed = Uri.tryParse(rawCover);
       if (parsed != null && parsed.scheme == 'https' && parsed.host.isNotEmpty &&
-          parsed.userInfo.isEmpty) cover = parsed;
+          parsed.userInfo.isEmpty) {
+        cover = parsed;
+      }
     }
     final id = (json['id'] ?? json['track_id'] ?? stream.toString()).toString();
     return ProviderTrack(id: id, title: title, artist: artist,

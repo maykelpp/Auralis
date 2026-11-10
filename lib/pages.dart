@@ -117,8 +117,10 @@ class _LibraryPageState extends State<LibraryPage> {
           SnackBar(content: Text(n == 0 ? 'No se importaron archivos' : '$n canciones importadas')));
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')));
+      }
     }
   }
   @override
@@ -136,11 +138,17 @@ class _LibraryPageState extends State<LibraryPage> {
           icon: const Icon(Icons.add), label: const Text('Importar archivos'))),
         const SizedBox(width: 8),
         Expanded(child: OutlinedButton.icon(onPressed: () async {
-          try { final n = await core.importMusicFolderSaf(); if (mounted) setState(() {});
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          try {
+            final n = await core.importMusicFolderSaf();
+            if (!context.mounted) return;
+            setState(() {});
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content: Text('$n canciones copiadas a Auralis')));
-          } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('No se pudo importar la carpeta: $e'))); }
+          } catch (e) {
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('No se pudo importar la carpeta: $e')));
+          }
         }, icon: const Icon(Icons.folder_open), label: const Text('Elegir carpeta (SAF)'))),
       ]),
       const SizedBox(height: 12),
@@ -240,8 +248,10 @@ class _LyricsPageState extends State<LyricsPage> {
       stream: AudioCore.instance.player.positionStream,
       builder: (context, snapshot) {
         final active = LrcLyrics.activeIndex(lines, snapshot.data ?? Duration.zero);
-        if (lines.isEmpty) return const Center(child: Text(
-          'Importa un archivo LRC para ver las letras sincronizadas.'));
+        if (lines.isEmpty) {
+          return const Center(child: Text(
+            'Importa un archivo LRC para ver las letras sincronizadas.'));
+        }
         return ListView.builder(itemCount: lines.length,
           itemBuilder: (context, i) => Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
