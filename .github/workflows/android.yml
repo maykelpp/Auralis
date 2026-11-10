@@ -18,6 +18,16 @@ jobs:
       - name: Generate Android project and install native SAF bridge
         run: |
           flutter create . --platforms=android --org app.auralis --project-name auralis_player
+          cat >> android/build.gradle.kts <<'GRADLE'
+
+          subprojects {
+              tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java).configureEach {
+                  kotlinOptions {
+                      jvmTarget = "11"
+                  }
+              }
+          }
+          GRADLE
           mkdir -p android/app/src/main/kotlin/app/auralis/auralis_player
           cp native/android/MainActivity.kt android/app/src/main/kotlin/app/auralis/auralis_player/MainActivity.kt
           sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/' android/app/build.gradle.kts || true
