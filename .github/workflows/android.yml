@@ -21,9 +21,9 @@ jobs:
           cat >> android/build.gradle.kts <<'GRADLE'
 
           subprojects {
-              tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile::class.java).configureEach {
-                  kotlinOptions {
-                      jvmTarget = "11"
+              tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+                  compilerOptions {
+                      jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
                   }
               }
           }
