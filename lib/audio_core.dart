@@ -103,7 +103,9 @@ class AudioCore {
       final path = row['path'];
       final title = row['title'];
       if (path is! String || title is! String ||
-          tracks.any((track) => track.path == path)) continue;
+          tracks.any((track) => track.path == path)) {
+        continue;
+      }
       tracks.add(LocalTrack(path: path, title: title,
           artist: row['artist'] as String? ?? 'Artista desconocido'));
       added++;
@@ -126,7 +128,9 @@ class AudioCore {
       final path = row['path'];
       final title = row['title'];
       if (path is! String || title is! String ||
-          tracks.any((track) => track.path == path)) continue;
+          tracks.any((track) => track.path == path)) {
+        continue;
+      }
       tracks.add(LocalTrack(path: path, title: title,
           artist: row['artist'] as String? ?? 'Artista desconocido'));
       added++;
